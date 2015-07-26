@@ -1,0 +1,120 @@
+---
+title: What parameters give a better mileage for a car? Does type of Transmission matter?
+author: "Kuber K Gudipati"
+date: "Sunday, July 26, 2015"
+output: pdf_document
+---
+##Context
+
+You work for Motor Trend, a magazine about the automobile industry. Looking at a data set of a collection of cars, they are interested in exploring the relationship between a set of variables and miles per gallon (MPG) (outcome). They are particularly interested in the following two questions:
+."Is an automatic or manual transmission better for MPG"
+."Quantify the MPG difference between automatic and manual transmissions"
+
+##Data 
+```{r results='hide'}
+library(ggplot2)
+data(mtcars)
+
+mtcars$cyl <- as.factor(mtcars$cyl)
+mtcars$vs <- as.factor(mtcars$vs)
+mtcars$am <- factor(mtcars$am)
+mtcars$gear <- factor(mtcars$gear)
+mtcars$carb <- factor(mtcars$carb)
+
+levels(mtcars$am) <- c("Automatic", "Manual"); 
+```
+##Initial Analysis
+
+Let's go with problem statement and draw a boxplot between mpg and am to see what type of transmission gives a better mileage. See the figures in Appendix.  
+
+It's evdent from the boxplot that Manual Transmission gives better mileage compared to Automatic. Lets draw the conclusion from regression models. Lets go with a liner regression models
+
+## Regression Analysis
+```{r, results='hide'}
+mpgamModel <-lm(mpg~am, data = mtcars)
+summary(mpgamModel)
+```
+
+R-squared:  0.3598 means, it only explaind 36% of variance in mpg. There may be  other potential variables affecting mpg. Let's plot with all the variables
+
+```{r, results='hide'}
+fullModel <-lm(mpg~., data = mtcars)
+summary(fullModel)
+```
+
+Based on the above summary (Estimate and t-values), CylinderCount, horsepower, weight and carb2 appear to be significant. Lets do stepwise model and figure out the most significant factors
+
+```{r, results='hide'}
+stepModel <-step(fullModel,direction="backward", k=log(nrow(mtcars)))
+summary(stepModel)
+```
+
+Based  on the above stepwise model, wt + qsec + am seems to be significant on mpg. Let analyze this model
+
+```{r, results='hide'}
+model2<-lm(mpg ~ wt + qsec + am, data = mtcars)
+summary(model2)
+```
+
+Lets compare mpgamModel and model2 and decide which one is better
+
+```{r, results='hide'}
+anova(mpgamModel,stepModel)
+```
+
+Since the p-vale <.05, model2 seems to give better results. 
+
+##Conclusion
+
+```{r, results='hide'}
+summary(model2)
+```
+
+It appears that, keeping weight and accelertion (1/4th mile distance) constant, Manual Transmission may give 2.936 more miles per gallon
+
+##Appendix
+
+Boxplot between Manual and Auto Transmission vs mpg
+
+```{r, echo=FALSE}
+ggplot(data=mtcars, aes(x=am, y=mpg, fill=am)) + geom_boxplot()
+```
+
+Model1: mpg~am
+
+```{r}
+mpgamModel <-lm(mpg~am, data = mtcars)
+summary(mpgamModel)
+```
+
+fullModel:
+
+```{r}
+fullModel <-lm(mpg~., data = mtcars)
+summary(fullModel)
+```
+
+stepModel:
+
+```{r, results='hide'}
+stepModel <-step(fullModel,direction="backward", k=log(nrow(mtcars)))
+summary(stepModel)
+```
+
+summary of model2:
+
+```{r}
+model2<-lm(mpg ~ wt + qsec + am, data = mtcars)
+summary(model2)
+```
+
+Lets compare mpgamModel and model2 and decide which one is better:
+
+```{r}
+anova(mpgamModel,stepModel)
+```
+
+Conclusion
+```{r}
+summary(model2)
+```
